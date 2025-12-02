@@ -1,0 +1,22 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 16
+    commands:
+      echo Installing frontend dependencies...
+      cd client
+      npm install
+  build:
+    commands:
+      echo Building the React app...
+      npm run build
+  post_build:
+    commands:
+      echo Zipping build folder for S3 deployment...
+      cd client
+      zip -r build.zip build
+artifacts:
+  files:
+    - client/build.zip
