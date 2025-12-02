@@ -5,18 +5,28 @@ phases:
     runtime-versions:
       nodejs: 16
     commands:
-      echo Installing frontend dependencies...
-      cd client
-      npm install
+      - echo Installing frontend dependencies...
+      - cd client
+      - npm install
+
+  pre_build:
+    commands:
+      - echo Running pre-build steps...
+      - cd client  # Already in client from install phase
+
   build:
     commands:
-      echo Building the React app...
-      npm run build
+      - echo Building the React app...
+      - cd client && npm run build
+
   post_build:
     commands:
-      echo Zipping build folder for S3 deployment...
-      cd client
-      zip -r build.zip build
+      - echo Zipping build folder for S3 deployment...
+      - cd client && zip -r build.zip build
+      - echo Uploading to S3 bucket...
+      - aws s3 cp client/build.zip s3://sports-react/builds/build.zip
+
 artifacts:
   files:
-    - client/build.zip
+    - 'client/build.zip'
+  name: build-$(date +%Y-%m-%d)
