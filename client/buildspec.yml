@@ -14,15 +14,20 @@ phases:
       echo Building the React app...
       cd client
       npm run build
+      echo List files in the build directory:
+      ls -alh client/build  # Ensure that build folder is created
 
   post_build:
     commands:
       echo Zipping build folder for S3 deployment...
       cd client
-      zip -r build.zip build  # Create build.zip from the build folder
+      zip -r build.zip build  # Create build.zip from the build directory
+      echo Listing files in the client folder:
+      ls -alh client  # Verify that build.zip exists
       echo Uploading build.zip to S3...
       aws s3 cp build.zip s3://sports-react/frontend/build.zip  # Upload to S3
 
-artifacts:
-  files:
-    - client/build.zip  # This will collect build.zip created in post_build phase
+# If you're uploading directly to S3, remove the artifacts section.
+# artifacts:
+#   files:
+#     - client/build.zip  # This will not be used because we are uploading directly to S3 in post_build
