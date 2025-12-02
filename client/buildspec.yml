@@ -19,10 +19,10 @@ phases:
     commands:
       echo Zipping build folder for S3 deployment...
       cd client
-      zip -r build.zip build
+      zip -r build.zip build  # Create build.zip from the build folder
       echo Uploading build.zip to S3...
-      aws s3 cp build.zip s3://sports-react/frontend/build.zip
+      aws s3 cp build.zip s3://sports-react/frontend/build.zip  # Upload to S3
 
 artifacts:
   files:
-    - client/build.zip
+    - client/build.zip  # This will collect build.zip created in post_build phase
