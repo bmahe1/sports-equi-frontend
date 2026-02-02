@@ -31,7 +31,7 @@ stages:
     displayName: Build Frontend
     dependsOn: BuildApproval
     pool:
-      name: fourids-agent-pool
+       vmImageName: 'ubuntu-latest'
     steps:
     - task: UseNode@1
       inputs:
@@ -64,7 +64,7 @@ stages:
   jobs:
   - job: DeployJob
     pool:
-      name: fourids-agent-pool
+      vmImageName: 'ubuntu-latest'
     steps:
     - task: DownloadPipelineArtifact@2
       inputs:
