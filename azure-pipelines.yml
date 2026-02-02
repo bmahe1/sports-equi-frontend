@@ -1,18 +1,26 @@
 trigger:
   branches:
     include:
-      - Main
+      - Master
 
 stages:
-- stage: ApprovalOnly
-  displayName: Approval Test
+# =================================
+# APPROVAL STAGE (SERVER JOB)
+# =================================
+- stage: Approval
+  displayName: Manual Approval Stage
   jobs:
-  - job: Approval
+  - job: ApprovalJob
+    displayName: Wait for Approval
     pool: server
     steps:
     - task: ManualValidation@0
+      displayName: Approve to Start Pipeline
       inputs:
         notifyUsers: |
-          yourname@company.com
+          Project Administrators
         instructions: |
-          Approve to test pipeline.
+          Please approve to start the frontend build and deployment.
+        timeoutInMinutes: 1440
+        onTimeout: reject
+
