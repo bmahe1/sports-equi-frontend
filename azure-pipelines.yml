@@ -4,79 +4,30 @@ trigger:
       - Main
 
 stages:
-# =================================
-# BUILD STAGE WITH APPROVAL
-# =================================
-- stage: Build
-  displayName: Build Frontend (Approval Required)
+- stage: ApprovalTest
+  displayName: Approval Test Stage
   jobs:
 
-  # 🔐 APPROVAL JOB (SERVER JOB)
-  - job: BuildApproval
-    displayName: Approve Build
+  # 🔐 APPROVAL JOB (SERVER)
+  - job: Approval
+    displayName: Wait for Approval
     pool: server
     steps:
     - task: ManualValidation@0
-      displayName: 'Approve to Start Build'
+      displayName: Manual Approval
       inputs:
         notifyUsers: |
-          mahesh@company.com
+          yourname@company.com
         instructions: |
-          Please approve to start frontend build.
+          Please approve to continue the pipeline.
         timeoutInMinutes: 1440
         onTimeout: reject
 
-  # 🏗 BUILD JOB (AGENT JOB)
-  - job: BuildJob
-    displayName: Build Frontend
-    dependsOn: BuildApproval
+  # ✅ CONTINUE AFTER APPROVAL
+  - job: AfterApproval
+    displayName: After Approval Job
+    dependsOn: Approval
     pool:
-      vmImage: 'ubuntu-latest'
+      vmImage: ubuntu-latest
     steps:
-    - task: UseNode@1
-      inputs:
-        version: '22.x'
-
-    - script: npm install -g @angular/cli
-      displayName: Install Angular CLI
-
-    - script: npm install --legacy-peer-deps
-      displayName: Install Dependencies
-
-    - script: npm run $(ENV_BUILD)
-      displayName: Build Angular App
-
-    - task: PublishPipelineArtifact@1
-      displayName: Publish Artifact
-      inputs:
-        targetPath: dist/4ids-frontend/browser
-        artifact: frontend
-
-# =================================
-# DEPLOY STAGE
-# =================================
-- stage: Deploy
-  displayName: Deploy Frontend
-  dependsOn: Build
-  jobs:
-  - job: DeployJob
-    displayName: Deploy to Azure Blob
-    pool:
-      vmImage: 'ubuntu-latest'
-    steps:
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifact: frontend
-        path: $(Pipeline.Workspace)/frontend
-
-    - task: AzureCLI@2
-      inputs:
-        azureSubscription: 'Azure-Resource-Connection'
-        scriptType: bash
-        scriptLocation: inlineScript
-        inlineScript: |
-          az storage blob upload-batch \
-            --account-name $(AZURE_STORAGE_ACCOUNT) \
-            --destination $(AZURE_CONTAINER_NAME) \
-            --source $(Pipeline.Workspace)/frontend \
-            --overwrite
+    - script: echo "✅ Approval successful. Pipeline is running."
