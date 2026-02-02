@@ -3,9 +3,6 @@ trigger:
     include:
       - Master
 
-pool:
-  name: fourids-agent-pool
-
 stages:
 # =================================
 # BUILD STAGE WITH APPROVAL
@@ -13,57 +10,50 @@ stages:
 - stage: Build
   displayName: Build Frontend (Approval Required)
   jobs:
-  - job: BuildJob
-    displayName: Build Job
-    steps:
 
-    # 🔐 MANUAL APPROVAL (BUILD STAGE)
+  # 🔐 APPROVAL JOB (SERVER)
+  - job: BuildApproval
+    displayName: Approve Build
+    pool: server
+    steps:
     - task: ManualValidation@0
       displayName: 'Approve to Start Build'
       inputs:
         notifyUsers: |
           user1@company.com
-          user2@company.com
         instructions: |
           Please approve to start frontend build.
         timeoutInMinutes: 1440
         onTimeout: reject
 
-    # 1️⃣ Install Node.js
+  # 🏗 BUILD JOB (AGENT)
+  - job: BuildJob
+    displayName: Build Frontend
+    dependsOn: BuildApproval
+    pool:
+      name: fourids-agent-pool
+    steps:
     - task: UseNode@1
       inputs:
         version: '22.x'
 
-    # 2️⃣ Install Yarn
-    - script: |
-        echo "Installing Yarn..."
-        curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-        echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-        sudo apt-get update && sudo apt-get install -y --no-install-recommends yarn
-      displayName: Install Yarn
-
-    # 3️⃣ Install Angular CLI
     - script: |
         npm install -g @angular/cli
       displayName: Install Angular CLI
 
-    # 4️⃣ Install dependencies
     - script: |
         npm install --legacy-peer-deps
-      displayName: Install NPM Packages
+      displayName: Install Dependencies
 
-    # 5️⃣ Build Angular project
     - script: |
         npm run $(ENV_BUILD)
       displayName: Build Angular App
 
-    # 6️⃣ Publish build output
     - task: PublishPipelineArtifact@1
-      displayName: Publish Frontend Artifact
+      displayName: Publish Artifact
       inputs:
         targetPath: dist/4ids-frontend/browser
         artifact: frontend
-        publishLocation: pipeline
 
 # =================================
 # DEPLOY STAGE
@@ -73,23 +63,20 @@ stages:
   dependsOn: Build
   jobs:
   - job: DeployJob
-    displayName: Deploy to Azure Blob
+    pool:
+      name: fourids-agent-pool
     steps:
-
     - task: DownloadPipelineArtifact@2
-      displayName: Download Artifact
       inputs:
         artifact: frontend
         path: $(Pipeline.Workspace)/frontend
 
     - task: AzureCLI@2
-      displayName: Upload to Azure Blob Storage
       inputs:
         azureSubscription: 'Azure-Resource-Connection'
         scriptType: bash
         scriptLocation: inlineScript
         inlineScript: |
-          echo "Uploading to Azure Blob Storage..."
           az storage blob upload-batch \
             --account-name $(AZURE_STORAGE_ACCOUNT) \
             --destination $(AZURE_CONTAINER_NAME) \
