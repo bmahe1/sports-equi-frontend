@@ -7,6 +7,10 @@ stages:
 # =================================
 # BUILD STAGE WITH APPROVAL
 # =================================
+- task: ManualValidation@1
+  inputs:
+    notifyUsers: 'mahesh'
+    approvers: 'yes'
 - stage: Build
   displayName: Build Frontend (Approval Required)
   jobs:
