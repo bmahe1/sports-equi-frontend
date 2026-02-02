@@ -1,21 +1,17 @@
 trigger:
   branches:
     include:
-      - Master
+      - Main
 
 stages:
 # =================================
 # BUILD STAGE WITH APPROVAL
 # =================================
-- task: ManualValidation@1
-  inputs:
-    notifyUsers: 'mahesh'
-    approvers: 'yes'
 - stage: Build
   displayName: Build Frontend (Approval Required)
   jobs:
 
-  # 🔐 APPROVAL JOB (SERVER)
+  # 🔐 APPROVAL JOB (SERVER JOB)
   - job: BuildApproval
     displayName: Approve Build
     pool: server
@@ -24,33 +20,30 @@ stages:
       displayName: 'Approve to Start Build'
       inputs:
         notifyUsers: |
-          user1@company.com
+          mahesh@company.com
         instructions: |
           Please approve to start frontend build.
         timeoutInMinutes: 1440
         onTimeout: reject
 
-  # 🏗 BUILD JOB (AGENT)
+  # 🏗 BUILD JOB (AGENT JOB)
   - job: BuildJob
     displayName: Build Frontend
     dependsOn: BuildApproval
     pool:
-       vmImageName: 'ubuntu-latest'
+      vmImage: 'ubuntu-latest'
     steps:
     - task: UseNode@1
       inputs:
         version: '22.x'
 
-    - script: |
-        npm install -g @angular/cli
+    - script: npm install -g @angular/cli
       displayName: Install Angular CLI
 
-    - script: |
-        npm install --legacy-peer-deps
+    - script: npm install --legacy-peer-deps
       displayName: Install Dependencies
 
-    - script: |
-        npm run $(ENV_BUILD)
+    - script: npm run $(ENV_BUILD)
       displayName: Build Angular App
 
     - task: PublishPipelineArtifact@1
@@ -67,8 +60,9 @@ stages:
   dependsOn: Build
   jobs:
   - job: DeployJob
+    displayName: Deploy to Azure Blob
     pool:
-      vmImageName: 'ubuntu-latest'
+      vmImage: 'ubuntu-latest'
     steps:
     - task: DownloadPipelineArtifact@2
       inputs:
