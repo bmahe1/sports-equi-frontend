@@ -4,30 +4,15 @@ trigger:
       - Main
 
 stages:
-- stage: ApprovalTest
-  displayName: Approval Test Stage
+- stage: ApprovalOnly
+  displayName: Approval Test
   jobs:
-
-  # 🔐 APPROVAL JOB (SERVER)
   - job: Approval
-    displayName: Wait for Approval
     pool: server
     steps:
     - task: ManualValidation@0
-      displayName: Manual Approval
       inputs:
         notifyUsers: |
           yourname@company.com
         instructions: |
-          Please approve to continue the pipeline.
-        timeoutInMinutes: 1440
-        onTimeout: reject
-
-  # ✅ CONTINUE AFTER APPROVAL
-  - job: AfterApproval
-    displayName: After Approval Job
-    dependsOn: Approval
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - script: echo "✅ Approval successful. Pipeline is running."
+          Approve to test pipeline.
