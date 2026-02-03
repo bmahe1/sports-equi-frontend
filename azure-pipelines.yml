@@ -21,6 +21,3 @@ stages:
           Project Administrators
         instructions: |
           Please approve to start the frontend build and deployment.
-        timeoutInMinutes: 1440
-        onTimeout: reject
-
